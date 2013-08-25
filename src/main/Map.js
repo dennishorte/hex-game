@@ -12,18 +12,22 @@ Hex.Map = function(config) {
  *   hexes {2d array of dicts} config files for initializing the map hexes
  */
 Hex.Map.prototype._initMap = function(config) {
+  if( config.rows < 1 ) throw "Invalid number of rows in Hex.Map: " + config.rows;
+  if( config.cols < 1 ) throw "Invalid number of columns in Hex.Map: " + config.cols;
+
   this.attrs = {
     rows: config.rows,
     cols: config.cols,
     hexes: [],
-    id_to_hex: {},
+    idToHex: {},
+    nextId: config.nextId || 0,
   };
 
   // Initialize the map hexes.
   var rowCount = 0;
   var colCount = 0;
-  var numCols = map.cols;
-  while (rowCount < map.rows) {
+  var numCols = config.cols;
+  while (rowCount < config.rows) {
     var hexRow = [];
 
     // Alternate the length of the rows to make a nicely shaped map.
@@ -35,38 +39,46 @@ Hex.Map.prototype._initMap = function(config) {
     else numCols += 1
 
     while (colCount < numCols) {
-
       // There is existing hex data for this map. Initialize it.
       if (typeof hexes !== 'undefined') {
-        hexRow.push(new Hex.Hex(hexes[rowCount][colCount]);
+        hexRow.push(new Hex.Hex(hexes[rowCount][colCount]));
       }
 
       // Create new, empty hexes for this map.
       else {
-        hexRow.push(
-          new Hex.Hex({
-            rows: rowCount,
-            cols: colCount
-          })
-        );
+        var hexId = this._genId();
+        var hex = new Hex.Hex({
+          id: hexId,
+          row: rowCount,
+          col: colCount
+        });
+        hexRow.push(hex);
+        this.attrs.idToHex[hexId] = hex;
       }
 
       colCount += 1;
     }
 
-    map.hexes.push(hexRow);
+    this.attrs.hexes.push(hexRow);
     rowCount += 1;
     colCount = 0;
   }
 };
 
-Hex.Map.prototype.getRows = function() { return this.attrs.rows; };
-Hex.Map.prototype.getCols = function() { return this.attrs.cols; };
-Hex.Map.prototype.getHexes = function() { return this.attrs.hexes; };
-Hex.Map.prototype.getHex = function(row, col) { return this.attrs.hexes[row][col]; };
-Hex.Map.prototype.getHex = function(id) { return this.attrs.id_to_hex[id]; };
-
-Hex.test = function() {
-  return 'Hex.test';
+Hex.Map.prototype._genId = function() {
+  this.attrs.nextId += 1;
+  return this.attrs.nextId;
 };
 
+Hex.Map.prototype.getRows = function() { return this.attrs.rows; };
+Hex.Map.prototype.getCols = function() { return this.attrs.cols; };
+Hex.Map.prototype.getHexes = function() { return this.attrs.hexes.slice(0); };
+Hex.Map.prototype.hex = function(row, col) { return this.attrs.hexes[row][col]; };
+Hex.Map.prototype.hex = function(id) { return this.attrs.idToHex[id]; };
+
+/**
+ * returns {Array[Hex]} A single array with all hexes ordered from top to bottom, left to right.
+ */
+Hex.Map.prototype.flatHexes = function() {
+  return [].concat.apply([], this.getHexes());
+};

@@ -7,8 +7,12 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     cafemocha: {
-      test_hexmap: {
-        src: 'bin/hexmap-spec.js',
+      map: {
+        src: 'src/test/map-spec.js',
+      },
+
+      hex: {
+        src: 'src/test/hex-spec.js',
       },
     },
 
@@ -26,10 +30,10 @@ module.exports = function(grunt) {
         dest: 'bin/hexmap.js',
       },
 
-      spec: {
-        src: ['src/test/*.js'],
-        dest: 'bin/hexmap-spec.js',
-      },
+      // spec: {
+      //   src: ['src/test/*.js'],
+      //   dest: 'bin/hexmap-spec.js',
+      // },
     },
 
   });
