@@ -41,13 +41,16 @@ Hex.Map.prototype._initMap = function(config) {
     while (colCount < numCols) {
       // There is existing hex data for this map. Initialize it.
       if (typeof hexes !== 'undefined') {
-        hexRow.push(new Hex.Hex(hexes[rowCount][colCount]));
+        var config = hexes[rowCount][colCount]
+        config.map = this;
+        hexRow.push(new Hex.Hex(config));
       }
 
       // Create new, empty hexes for this map.
       else {
         var hexId = this._genId();
         var hex = new Hex.Hex({
+          map: this,
           id: hexId,
           row: rowCount,
           col: colCount
