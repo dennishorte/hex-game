@@ -1,33 +1,52 @@
 
-Hex.Hex = function(config) {
-    this._initHex(config);
-};
+/*
+ * A hex can contain many objects. To store them it has a number of pre-defined slots which
+ * objects can be inserted into.
+ */
 
-Hex.Hex.prototype._initHex = function(config) {
+Hex.Hex = function(row, col) {
     this.attrs = {
-        id: config.id,
-        row: config.row,
-        col: config.col,
-        diag: config.col + Math.floor( config.row / 2 ),
-        map: config.map,
-        elements: []
+        row: row,
+        col: col,
+        diag: col + Math.floor( row / 2 ),
+        map: null,
+        slots: {
+            terrain: null,
+            resource: null,
+            building: null,
+            unit: null,
+        }
     };
-
 };
 
-Hex.Hex.prototype.getId = function() { return this.attrs.id; };
-Hex.Hex.prototype.getRow = function() { return this.attrs.row; };
-Hex.Hex.prototype.getCol = function() { return this.attrs.col; };
-Hex.Hex.prototype.getDiag = function() { return this.attrs.diag; };
-Hex.Hex.prototype.getMap = function() { return this.attrs.map; };
-Hex.Hex.prototype.getElements = function() { return this.attrs.elements.slice(0); };
+Hex.Util.addGetters(Hex.Hex, 'row', 'col', 'diag', 'map');
+Hex.Util.addSafeSetters(Hex.Hex, 'map');
 
-Hex.Hex.prototype.addElement = function(elem, path) {
-    console.assert(elem.getHex() == this, 'Cannot add an element unless it is on this hex.');
+Hex.Hex.prototype.posString = function() { return Hex.Util.posString(this.getRow(), this.getCol()); };
 
-    this.attrs.elements.push(elem);
-    this.attrs.elements.sort(function(a, b) {
-        return a.getZ() - b.getZ();
-    });
+Hex.Hex.prototype.setSlot = function (name, value) {
+    if (name in this.attrs.slots) {
+        this.attrs.slots[name] = value;
+        value.setHex(this);
+    }
+    else {
+        throw new Error('Unknown slot: ' + name);
+    }
 };
 
+Hex.Hex.prototype.getSlot = function (name) {
+    return this.attrs.slots[name];
+};
+Hex.Hex.prototype.getTerrain = function () {
+    return this.attrs.slots.terrain;
+};
+
+Hex.Hex.prototype.setUnit = function (unit) {
+    if (unit.getHex() === this) return;
+    
+    if (unit.getHex() != null) {
+        unit.getHex().clearUnit();
+    }
+    this.setSlot('unit', unit);
+    return this;
+};

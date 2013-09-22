@@ -26,14 +26,10 @@ module.exports = function(grunt) {
           banner: '(function (Hex) {\n' + '  \'use strict\';\n\n',
           footer: '\n})(typeof exports === \'undefined\' ? this[\'Hex\'] = {} : exports);\n'
         },
-        src: ['src/main/*.js'],
+        src: ['src/main/requires.js', 'src/main/util.js', 'src/main/*.js'],
         dest: 'bin/hexmap.js',
       },
 
-      // spec: {
-      //   src: ['src/test/*.js'],
-      //   dest: 'bin/hexmap-spec.js',
-      // },
     },
 
   });

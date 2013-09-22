@@ -1,87 +1,107 @@
 
-Hex.Map = function(config) {
-    this._initMap(config);
-}
-
-/**
- * Required config parameters:
- *   rows {Int} number of rows in the map; should be an odd number to get a nicely formatted map
- *   cols {Int] number of columns in the wider columns of the map
+/*
+ * The map is intended to be a data structure for operating on hexes, but does nothing to specify
+ * hexes on its own. Fundamentally, it understands that the hexes exist in a grid, and uses this
+ * knowledge, but otherwise it makes no assumptions about the hexes.
  *
- * Optional config parameters:
- *   hexes {2d array of dicts} config files for initializing the map hexes
+ * Hexes specify a row and column, which is essential for rendering them correctly, but that row
+ * and column can not, in general, be used to extract any information beyond the relative positions
+ * of the hex. To make this work, hex information is stored in a map rather than in an array.
+ *
+ * A map is never serialized, because all of its information is carried in its hexes.
  */
-Hex.Map.prototype._initMap = function(config) {
-    if( config.rows < 1 ) throw "Invalid number of rows in Hex.Map: " + config.rows;
-    if( config.cols < 1 ) throw "Invalid number of columns in Hex.Map: " + config.cols;
 
+Hex.Map = function () {
     this.attrs = {
-        rows: config.rows,
-        cols: config.cols,
-        hexes: [],
-        idToHex: {},
-        nextId: config.nextId || 0,
+        min_row: 0,
+        max_row: -1,
+        min_col: 0,
+        max_col: -1,
+        hexes: {},
+        hexCount: 0
     };
+};
 
-    // Initialize the map hexes.
-    var rowCount = 0;
-    var colCount = 0;
-    var numCols = config.cols;
-    while (rowCount < config.rows) {
-        var hexRow = [];
-
-        // Alternate the length of the rows to make a nicely shaped map.
-        // This is important to avoid hanging corners. If this is not done then two of the
-        // corners will have a hex that only has two neighbors, rather than three.
-        // Note, this only help if the total number of rows is odd. If it is even, it will result
-        // in both of the bottom corners suffering from the two neighbor problem.
-        if (rowCount % 2 == 0) numCols -= 1
-        else numCols += 1
-
-        while (colCount < numCols) {
-            // There is existing hex data for this map. Initialize it.
-            if (typeof hexes !== 'undefined') {
-                var config = hexes[rowCount][colCount]
-                config.map = this;
-                hexRow.push(new Hex.Hex(config));
-            }
-
-            // This is a new map. Create new, empty hexes for it.
-            else {
-                var hexId = this._genId();
-                var hex = new Hex.Hex({
-                    map: this,
-                    id: hexId,
-                    row: rowCount,
-                    col: colCount
-                });
-                hexRow.push(hex);
-                this.attrs.idToHex[hexId] = hex;
-            }
-
-            colCount += 1;
-        }
-
-        this.attrs.hexes.push(hexRow);
-        rowCount += 1;
-        colCount = 0;
+/*
+ * Hex.Map.prototype.getRows
+ * @return {Int} the number of rows in the map
+ */
+Hex.Map.prototype.getRows = function () {
+    if (this.hexCount() == 0) {
+        return 0;
+    }
+    else if (this.hexCount() == 1) {
+        return 1;
+    }
+    else {
+        return this.attrs.max_row - this.attrs.min_row + 1;
     }
 };
 
-Hex.Map.prototype._genId = function() {
-    this.attrs.nextId += 1;
-    return this.attrs.nextId;
-};
-
-Hex.Map.prototype.getRows = function() { return this.attrs.rows; };
-Hex.Map.prototype.getCols = function() { return this.attrs.cols; };
-Hex.Map.prototype.getHexes = function() { return this.attrs.hexes.slice(0); };
-Hex.Map.prototype.hex = function(row, col) { return this.attrs.hexes[row][col]; };
-Hex.Map.prototype.hex = function(id) { return this.attrs.idToHex[id]; };
-
-/**
- * returns {Array[Hex]} A single array with all hexes ordered from top to bottom, left to right.
+/*
+ * Hex.Map.prototype.getCols
+ * @return {Int} the number of columns in the map
  */
-Hex.Map.prototype.flatHexes = function() {
-    return [].concat.apply([], this.getHexes());
+Hex.Map.prototype.getCols = function () {
+    if (this.hexCount() == 0) {
+        return 0;
+    }
+    else if (this.hexCount() == 1) {
+        return 1;
+    }
+    else {
+        return this.attrs.max_col - this.attrs.min_col + 1;
+    }
 };
+
+Hex.Map.prototype.getHex = function (row, col) {
+    var string = Hex.Util.posString(row, col);
+    return this.attrs.hexes[string];
+};
+
+Hex.Map.prototype.hexCount = function () {
+    return this.attrs.hexCount;
+};
+
+/*
+ * Hex.Map.prototype.updateHex
+ * 
+ * If a new hex is added that is updating information for an existing hex, then the new hex should
+ * have the same position and id as the previous hex. If not, an error will be thrown.
+ *
+ * @param hex {Hex.Hex} the hex object to insert into the map
+ */
+Hex.Map.prototype.updateHex = function (hex) {
+
+    // Update our known map size.
+    if (this.hexCount() === 0) {
+        this.attrs.min_row = hex.getRow();
+        this.attrs.max_row = hex.getRow();
+        this.attrs.min_col = hex.getCol();
+        this.attrs.max_col = hex.getCol();
+    }
+    else {
+        if (hex.getRow() < this.attrs.min_row) {
+            this.attrs.min_row = hex.getRow();
+        }
+        if (hex.getRow() > this.attrs.max_row) {
+            this.attrs.max_row = hex.getRow();
+        }
+        if (hex.getCol() < this.attrs.min_col) {
+            this.attrs.min_col = hex.getCol();
+        }
+        if (hex.getCol() > this.attrs.max_col) {
+            this.attrs.max_col = hex.getCol();
+        }
+    }
+
+    // If this is a new hex, increment the number of hexes in the map.
+    if (!(hex.posString() in this.attrs.hexes)) {
+        this.attrs.hexCount += 1;
+    }
+
+    hex.setMap(this);
+    this.attrs.hexes[hex.posString()] = hex;
+};
+
+
