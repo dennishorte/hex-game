@@ -1,24 +1,22 @@
 
-Hex.Game = function (config) {
+Hex.Game = function () {
     this.attrs = {
         map: new Hex.Map(),
         players: []
     };
 };
 
-Hex.Util.addGetters(Hex.Game, 'map');
+Hex.Util.addGetters(Hex.Game, 'map', 'players');
 
 Hex.Game.prototype.addPlayer = function (player) {
     player.setGame(this);
-    player.setId(this.players.length);
+    player.setId(this.attrs.players.length);
     this.attrs.players.push(player);
 };
 
 
 
-
-
-Hex.Player = function (config) {
+Hex.Player = function () {
     this.attrs = {
         game: null,
         id: null,

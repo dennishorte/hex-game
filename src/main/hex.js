@@ -37,8 +37,13 @@ Hex.Hex.prototype.setSlot = function (name, value) {
 Hex.Hex.prototype.getSlot = function (name) {
     return this.attrs.slots[name];
 };
+
 Hex.Hex.prototype.getTerrain = function () {
     return this.attrs.slots.terrain;
+};
+
+Hex.Hex.prototype.setTerrain = function (terrain) {
+    this.setSlot('terrain', terrain);
 };
 
 Hex.Hex.prototype.setUnit = function (unit) {

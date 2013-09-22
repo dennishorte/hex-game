@@ -14,6 +14,10 @@ module.exports = function(grunt) {
       hex: {
         src: 'src/test/hex-spec.js',
       },
+
+      game: {
+        src: 'src/test/game-spec.js',
+      },
     },
 
     clean: {
