@@ -14,15 +14,20 @@ Hex.Game.prototype.addPlayer = function (player) {
     this.attrs.players.push(player);
 };
 
-
-
-Hex.Player = function () {
-    this.attrs = {
-        game: null,
-        id: null,
-        map: new Hex.Map()
-    };
+/*
+ * Explore updates a player's information about a particular hex, and gives them
+ * visibility to that hex until visibility is reset.
+ */
+Hex.Game.prototype.exploreHex = function (player, hex) {
+    player.addVisible(hex.repr());
 };
 
-Hex.Util.addGetters(Hex.Player, 'game', 'id', 'map');
-Hex.Util.addSafeSetters(Hex.Player, 'game', 'id');
+/*
+ * Resets the visibility for all player.
+ */
+Hex.Game.prototype.resetVisibility = function () {
+    _.forEach(this.getPlayers(), function(player) {
+        player.clearVisible();
+    });
+};
+

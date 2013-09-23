@@ -50,4 +50,39 @@ describe('Hex.Game', function () {
             assert.equal(game.getPlayers()[0].getMap().getRows(), 0);
         });
     });
+
+    describe('when a player explores something', function() {
+        var game = new Hex.Game();
+        var player1 = new Hex.Player();
+        var player2 = new Hex.Player();
+        var player3 = new Hex.Player();
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.addPlayer(player3);
+        Hex.Util.genMap(5, 5, game.getMap());
+
+        var hex = game.getMap().getHex(2,3);
+        game.exploreHex(player2, hex);
+        
+        it('should be added to that player\'s map', function () {
+            assert.equal(player2.getMap().hexCount(), 1);
+            assert.ok(player2.getMap().getHex(2,3) === hex);
+        });
+
+        it('should become visible to that player', function () {
+            assert.ok(player2.visible(hex));
+        });
+
+        it('should not be added to other player\'s maps', function () {
+            assert.equal(player1.getMap().hexCount(), 0);
+            assert.equal(player3.getMap().hexCount(), 0);
+            assert.strictEqual(typeof player1.getMap().getHex(2,3), 'undefined');
+            assert.strictEqual(typeof player3.getMap().getHex(2,3), 'undefined');
+        });
+
+        it('should not be visible to other players', function () {
+            assert.ok(!player1.visible(hex));
+            assert.ok(!player3.visible(hex));
+        });
+    });
 });
